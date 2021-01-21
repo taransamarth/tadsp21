@@ -1,2 +1,2 @@
 # tadsp21
-text as data sp2021
+PLSC 497: Text as Data
