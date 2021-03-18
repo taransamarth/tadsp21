@@ -1,0 +1,25 @@
+---
+title: "PLSC 497 Prospectus"
+author: "Taran Samarth"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Research Question and Possible Results
+
+I want to answer the question: do SCOTUS justices of one party identification use more critical language when ruling against administrations of opposing party identification than administrations of their own party? The possible results could suggest a yes, no, or (most likely) inconclusive answer to the question.
+
+# Dataset Retrieval
+
+The primary texts for this analysis are SCOTUS opinions. In order to initially identify the relevant cases (cases where justices rule against the executive) and tag with the necessary variables (e.g. partisanship), I will merge and subset data from the Supreme Court Judicial Database^[http://scdb.wustl.edu/data.php] and Supreme Court Justices Database^[http://epstein.wustl.edu/research/justicesdata.html]. Using API access to a database that has full opinion texts^[Either case.law which I already have unlimited access to (but does not have cases post-2015) or LexisNexis which has opinions up to today (but I'll need to request API access and I don't know how long that will take)], I'll use the citation entries available in the Judicial Database to pull opinions and preprocess them.
+
+# Methods
+
+The ideal strategy uses some form of sentiment analysis. There are two primary issues with answering this question using methods we've learned so far: context-sensitivity and specialized language. In order to measure sentiment towards the executive in a document, I need to be able to pull out words close to signal terms (e.g. "the government" is the most prominent referent to the executive in opinions) and then assign sentiments to those words. Consequently, basic dictionary-based sentiment analysis on the whole document is insufficient--I would just be getting overall sentiment, not sentiment regarding the executive branch. The other problem is that the legal world often uses extremely domain-specific language, such that polarities for different words in a conversational context are likely not the same in SCOTUS opinions. 
+
+The best answer I've discovered so far is latent semantic scaling^[https://www.tandfonline.com/doi/full/10.1080/19312458.2020.1832976] which allows me to handle both problems cleanly. Using unambiguously positive/negative words and a list of words that are prominent in the context of a certain term, LSS computes polarities for words based on proximity to the seedwords, and uses those polarities to calculate the sentiment around the given term for an entire document. It is semisupervised in that I pass in a list of seedwords that are absolutely positive or negative when used. Although LSS has not been used (as far as I could tell) in a legal context, Dr. Zorn^[https://www.cambridge.org/core/journals/political-science-research-and-methods/article/corpusbased-dictionaries-for-sentiment-analysis-of-specialized-vocabularies/AE4112A00FF6474F649ED53BCAEEEEE9] actually appears to have developed a similar method a few years ago where sentiment is estimated for all terms in a document by using proximity to a set of unambiguously positive/negative seedwords. This was deployed for SCOTUS opinions to investigate sentiment in majority opinions and then see how sentiment varied across majority size, individual justice, and chief justice. LSS adds in context-sensitivity, and, even if the ultimate results to my research question are not interesting, merely using LSS on legal texts might yield some interesting methodological results, at the least. I could compare estimates for sentiment via LSS against dictionary-based methods or against various sets of seedwords (e.g. a basic set of seedwords versus seedwords that I identify as absolutely positive/negative using a subset of opinions).
+
+After fitting the sentiment analysis model on the documents, I can then run a regression analysis to see if justices are more critical of opposing-party administrations than same-party administrations (accounting for fixed effects from individual justices, party, and chief justice). Whether or not I can actually complete this final aspect of the analysis depends on the soundness of the LSS results. I will also include a time-series analysis to see if justices, in general, have become more critical of opposing-party executives over time.
